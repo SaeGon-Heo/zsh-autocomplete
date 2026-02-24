@@ -438,9 +438,6 @@ ${0}:precmd() {
   .autocomplete:async:sufficient-input ||
       return 2
 
-  compstate[insert]=
-  compstate[old_list]=
-  compstate[pattern_insert]=
   .autocomplete:async:list-choices:main-complete
 
   # Workaround: In Zsh <= 5.9.0, comppostfuncs don't get called after completing subscripts.
@@ -452,6 +449,13 @@ ${0}:precmd() {
   if [[ -v _autocomplete__partial_list ]]; then
     builtin compadd -J -last- -x '%F{0}%K{12}(MORE)%f%k'
     _lastcomp[list_lines]=$compstate[list_lines]
+  fi
+
+  if [[ -n $compstate[exact_string] && -z $_lastcomp[tags] &&
+        compstate[nmatches] -eq 1 && compstate[list_lines] -eq 1 ]]; then
+    # WORKAROUND: _arguments adds $compstate[exact_string] as a completion w/out description.
+    compstate[list]=
+    _lastcomp[list]=
   fi
 
   return 2  # Don't return 1, to prevent beeping.
